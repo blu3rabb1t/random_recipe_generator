@@ -1,10 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 
 export default function App() {
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [savedRecipes, setSavedRecipes] = useState([]);
 
+  // Load saved recipes from localStorage on first render
+  useEffect(() => {
+    const stored = localStorage.getItem("savedRecipes");
+    if (stored) {
+      setSavedRecipes(JSON.parse(stored));
+    }
+  }, []);
+
+  // Fetch a random recipe
   const getRandomRecipe = async () => {
     setLoading(true);
     try {
@@ -17,6 +27,7 @@ export default function App() {
     setLoading(false);
   };
 
+  // Extract ingredients
   const getIngredients = () => {
     if (!recipe) return [];
     let ingredients = [];
@@ -28,6 +39,16 @@ export default function App() {
       }
     }
     return ingredients;
+  };
+
+  // Save recipe to localStorage
+  const saveRecipe = () => {
+    if (!recipe) return;
+    const exists = savedRecipes.find(r => r.idMeal === recipe.idMeal);
+    if (exists) return; // avoid duplicates
+    const updated = [...savedRecipes, recipe];
+    setSavedRecipes(updated);
+    localStorage.setItem("savedRecipes", JSON.stringify(updated));
   };
 
   return (
@@ -67,6 +88,23 @@ export default function App() {
               🎥 Watch on YouTube
             </a>
           )}
+          <button className="save-button" onClick={saveRecipe}>
+            ⭐ Save Recipe
+          </button>
+        </div>
+      )}
+
+      {savedRecipes.length > 0 && (
+        <div className="saved-section">
+          <h2>📚 Saved Recipes</h2>
+          <div className="saved-grid">
+            {savedRecipes.map(r => (
+              <div key={r.idMeal} className="saved-card">
+                <img src={r.strMealThumb} alt={r.strMeal} />
+                <p>{r.strMeal}</p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
